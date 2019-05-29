@@ -34,7 +34,16 @@ const actions = {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
+        console.log(response)
         const { data } = response
+        console.log(data)
+        // if(data.status == 0){
+        //   alert('账户密码错误')
+        // }else if(data.status == 1){
+        //   commit('SET_TOKEN', data.token)
+        //   setToken(data.token)
+
+        // }
         commit('SET_TOKEN', data.token)
         setToken(data.token)
         resolve()
