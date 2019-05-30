@@ -1,115 +1,80 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.title" placeholder="Title" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+      <el-input v-model="listQuery.number" placeholder="请输入账号" size="small" style="width: 150px;" class="filter-item" />
+      <el-input v-model="listQuery.name" placeholder="请输入姓名" size="small" style="width: 150px;" class="filter-item" />
+      <el-button v-waves class="filter-item" type="primary" size="small" icon="el-icon-search" @click="search">
         搜索
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button class="filter-item" style="margin-left: 10px;" size="small" type="primary" icon="el-icon-edit" @click="add">
         添加
       </el-button>
     </div>
 
-    <el-table
-      :key="tableKey"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-      style="width: 100%;"
-    >
-      <el-table-column label="No." prop="id" align="center" width="80">
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%;">
+      <el-table-column label="No." type="index" align="center" width="80" />
+      <el-table-column label="账号" prop="number" align="center" />
+      <el-table-column label="姓名" prop="name" align="center" />
+      <el-table-column label="公司" prop="corporation" align="center" />
+      <el-table-column label="部门" prop="department" align="center" />
+      <el-table-column label="团队" prop="keyhint" align="center" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="账号"  align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.timestamp | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="姓名" align="center">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.title }}</span>
-          <el-tag>{{ row.type | typeFilter }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="公司" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column v-if="showReviewer" label="部门" align="center">
-        <template slot-scope="scope">
-          <span style="color:red;">{{ scope.row.reviewer }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="团队" align="center">
-        <template slot-scope="scope">
-          <svg-icon v-for="n in +scope.row.importance" :key="n" icon-class="star" class="meta-item__icon" />
-        </template>
-      </el-table-column>
-      <el-table-column label="Actions" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">
-            Edit
-          </el-button>
-          <el-button v-if="row.status!='published'" size="mini" type="success" @click="handleModifyStatus(row,'published')">
-            Publish
-          </el-button>
-          <el-button v-if="row.status!='draft'" size="mini" @click="handleModifyStatus(row,'draft')">
-            Draft
-          </el-button>
-          <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleModifyStatus(row,'deleted')">
-            Delete
-          </el-button>
+          <el-button type="primary" size="mini" @click="edit(scope.row.id)"> 编辑</el-button>
+          <el-button type="danger" size="mini" @click="deleteUser(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" style="margin-top:0px;" @pagination="getList" />
 
-    
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" width="25%">
+      <el-form :model="addForm">
+        <el-form-item label="员工编号" :label-width="formLabelWidth" style="text-align:right">
+          <el-input v-model="addForm.number" />
+        </el-form-item>
+        <el-form-item label="姓名" :label-width="formLabelWidth" style="text-align:right">
+          <el-input v-model="addForm.name" />
+        </el-form-item>
+        <el-form-item label="公司" :label-width="formLabelWidth" style="text-align:right">
+          <el-select v-model="addForm.company" placeholder="请选择公司" style="width:100%">
+            <el-option v-for="(item,index) in companyList" :key="index" :label="item.corporation" :value="item.corporation" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="部门" :label-width="formLabelWidth" style="text-align:right">
+          <el-select v-model="addForm.department" placeholder="请选择部门" style="width:100%">
+            <el-option v-for="(item,index) in departmentList" :key="index" :label="item.department" :value="item.department" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关键字" :label-width="formLabelWidth" style="text-align:right">
+          <el-input v-model="addForm.keyword" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" @click="dialogStatus==='create'?addUser():updateUser()">
+          确认
+        </el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
+// import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
+// import { getUserList } from '@/api/admin'
 import waves from '@/directive/waves' // waves directive
-import { parseTime } from '@/utils'
+// import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-
-const calendarTypeOptions = [
-  { key: 'CN', display_name: 'China' },
-  { key: 'US', display_name: 'USA' },
-  { key: 'JP', display_name: 'Japan' },
-  { key: 'EU', display_name: 'Eurozone' }
-]
-
-// arr to obj, such as { CN : "China", US : "USA" }
-const calendarTypeKeyValue = calendarTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
-  return acc
-}, {})
+import Axios from 'axios'
 
 export default {
   name: 'ComplexTable',
   components: { Pagination },
   directives: { waves },
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'info',
-        deleted: 'danger'
-      }
-      return statusMap[status]
-    },
-    typeFilter(type) {
-      return calendarTypeKeyValue[type]
-    }
-  },
   data() {
     return {
       tableKey: 0,
@@ -118,183 +83,223 @@ export default {
       listLoading: true,
       listQuery: {
         page: 1,
-        limit: 5
-      },
-      importanceOptions: [1, 2, 3],
-      calendarTypeOptions,
-      sortOptions: [{ label: 'ID Ascending', key: '+id' }, { label: 'ID Descending', key: '-id' }],
-      statusOptions: ['published', 'draft', 'deleted'],
-      showReviewer: false,
-      temp: {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        type: '',
-        status: 'published'
+        limit: 10,
+        number: '',
+        name: ''
       },
       dialogFormVisible: false,
-      dialogStatus: '',
       textMap: {
-        update: 'Edit',
-        create: 'Create'
+        update: '编辑用户',
+        create: '添加用户'
       },
-      dialogPvVisible: false,
-      pvData: [],
-      rules: {
-        type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        title: [{ required: true, message: 'title is required', trigger: 'blur' }]
+      dialogStatus: '',
+      addForm: {
+        name: '',
+        number: '',
+        company: '',
+        department: '',
+        keyword: ''
       },
-      downloadLoading: false
+      formLabelWidth: '80px',
+      companyList: [],
+      departmentList: []
     }
   },
   created() {
     this.getList()
   },
   methods: {
+    // 获取用户列表
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
+      var api = this.GLOBAL.Baseurl + '/Admin/user_list'
+      // var params = this.listQuery
+
+      const param = new URLSearchParams()
+      param.append('page', this.listQuery.page)
+      param.append('limit', this.listQuery.limit)
+      param.append('number', this.listQuery.number)
+      param.append('name', this.listQuery.name)
+
+      Axios.post(api, param).then(response => {
         this.list = response.data.items
         this.total = response.data.total
+        this.listLoading = false
       })
     },
-    handleFilter() {
+    // 搜索按钮
+    search() {
       this.listQuery.page = 1
       this.getList()
     },
-    handleModifyStatus(row, status) {
-      this.$message({
-        message: '操作Success',
-        type: 'success'
-      })
-      row.status = status
-    },
-    sortChange(data) {
-      const { prop, order } = data
-      if (prop === 'id') {
-        this.sortByID(order)
+    // 重置添加数据
+    resetAddForm() {
+      this.addForm = {
+        id: '',
+        name: '',
+        number: '',
+        company: '',
+        department: '',
+        keyword: ''
       }
     },
-    sortByID(order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = '+id'
-      } else {
-        this.listQuery.sort = '-id'
-      }
-      this.handleFilter()
-    },
-    resetTemp() {
-      this.temp = {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        status: 'published',
-        type: ''
-      }
-    },
-    handleCreate() {
-      this.resetTemp()
+    // 添加按钮
+    add() {
+      console.log(111)
+      this.resetAddForm()
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
+      this.getCompany()
+      this.getDepartment()
+      // this.$nextTick(() => {
+      //   this.$refs['dataForm'].clearValidate()
+      // })
     },
-    createData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
-          this.temp.author = 'vue-element-admin'
-          createArticle(this.temp).then(() => {
-            this.list.unshift(this.temp)
-            this.dialogFormVisible = false
-            this.$notify({
-              title: 'Success',
-              message: 'Created Successfully',
-              type: 'success',
-              duration: 2000
-            })
-          })
-        }
-      })
-    },
-    handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
+    // 编辑按钮
+    edit(id) {
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+      this.getCompany()
+      this.getDepartment()
+      this.getUserInfo(id)
+    },
+
+    // 获取用户信息
+    getUserInfo(id) {
+      var api = this.GLOBAL.Baseurl + '/Admin/user_info'
+      var params = {
+        id_data: id
+      }
+      Axios.get(api, { params }).then(response => {
+        var mes = response.data.mes[0]
+        this.addForm = {
+          id: mes.id,
+          name: mes.name,
+          number: mes.number,
+          company: mes.corporation,
+          department: mes.department,
+          keyword: mes.keyhint
+        }
       })
     },
-    updateData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          const tempData = Object.assign({}, this.temp)
-          tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
-            for (const v of this.list) {
-              if (v.id === this.temp.id) {
-                const index = this.list.indexOf(v)
-                this.list.splice(index, 1, this.temp)
-                break
-              }
-            }
+    // 获取公司
+    getCompany() {
+      var api = this.GLOBAL.Baseurl + '/Admin/arr_company'
+      Axios.get(api).then(response => {
+        this.companyList = response.data.company
+      })
+    },
+
+    // 获取部门
+    getDepartment() {
+      var api = this.GLOBAL.Baseurl + '/Admin/arr_department'
+      Axios.get(api).then(response => {
+        this.departmentList = response.data.department
+      })
+    },
+
+    // 添加用户
+    addUser() {
+      var addForm = this.addForm
+      console.log(addForm)
+      if (addForm.number === '') {
+        this.$message({ message: '请输入员工编号', type: 'warning', duration: 1500 })
+      } else if (addForm.name === '') {
+        this.$message({ message: '请输入姓名', type: 'warning', duration: 1500 })
+      } else if (addForm.company === '') {
+        this.$message({ message: '请选择公司', type: 'warning', duration: 1500 })
+      } else if (addForm.department === '') {
+        this.$message({ message: '请选择部门', type: 'warning', duration: 1500 })
+      } else if (addForm.keyword === '') {
+        this.$message({ message: '请输入关键字', type: 'warning', duration: 1500 })
+      } else {
+        var api = this.GLOBAL.Baseurl + '/Admin/user_add'
+        const param = new URLSearchParams()
+        param.append('number_data', addForm.number)
+        param.append('name_data', addForm.name)
+        param.append('company_data', addForm.company)
+        param.append('department_data', addForm.department)
+        param.append('keyword_data', addForm.keyword)
+
+        Axios.post(api, param).then(response => {
+          console.log(response)
+          if (response.data.status === -1) {
+            this.$message({ message: '该用户已存在', type: 'warning', duration: 1500 })
+          } else {
+            this.$message({ message: '添加成功', type: 'success', duration: 1500 })
             this.dialogFormVisible = false
-            this.$notify({
-              title: 'Success',
-              message: 'Update Successfully',
-              type: 'success',
-              duration: 2000
-            })
-          })
-        }
-      })
-    },
-    handleDelete(row) {
-      this.$notify({
-        title: 'Success',
-        message: 'Delete Successfully',
-        type: 'success',
-        duration: 2000
-      })
-      const index = this.list.indexOf(row)
-      this.list.splice(index, 1)
-    },
-    handleFetchPv(pv) {
-      fetchPv(pv).then(response => {
-        this.pvData = response.data.pvData
-        this.dialogPvVisible = true
-      })
-    },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['timestamp', 'title', 'type', 'importance', 'status']
-        const filterVal = ['timestamp', 'title', 'type', 'importance', 'status']
-        const data = this.formatJson(filterVal, this.list)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: 'table-list'
+            this.resetAddForm()
+            this.getList()
+          }
         })
-        this.downloadLoading = false
-      })
+      }
     },
-    formatJson(filterVal, jsonData) {
-      return jsonData.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
+    // 更新用户
+    updateUser() {
+      var addForm = this.addForm
+      console.log(addForm.id)
+      if (addForm.number === '') {
+        this.$message({ message: '请输入员工编号', type: 'warning', duration: 1500 })
+      } else if (addForm.name === '') {
+        this.$message({ message: '请输入姓名', type: 'warning', duration: 1500 })
+      } else if (addForm.company === '') {
+        this.$message({ message: '请选择公司', type: 'warning', duration: 1500 })
+      } else if (addForm.department === '') {
+        this.$message({ message: '请选择部门', type: 'warning', duration: 1500 })
+      } else if (addForm.keyword === '') {
+        this.$message({ message: '请输入关键字', type: 'warning', duration: 1500 })
+      } else {
+        var api = this.GLOBAL.Baseurl + '/Admin/user_update'
+        const param = new URLSearchParams()
+        param.append('id_data', addForm.id)
+        param.append('number_data', addForm.number)
+        param.append('name_data', addForm.name)
+        param.append('company_data', addForm.company)
+        param.append('department_data', addForm.department)
+        param.append('keyword_data', addForm.keyword)
+
+        Axios.post(api, param).then(response => {
+          if (response.data.status === 1) {
+            this.$message({ message: '保存成功', type: 'success', duration: 1500 })
+            this.dialogFormVisible = false
+            this.resetAddForm()
+            this.getList()
+          } else {
+            this.$message({ message: '保存失败', type: 'error', duration: 1500 })
+          }
+        })
+      }
+    },
+    // 删除用户
+    deleteUser(id) {
+      this.$confirm('删除该用户, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        var api = this.GLOBAL.Baseurl + '/Admin/user_del'
+        var params = {
+          id_data: id
         }
-      }))
+        Axios.get(api, { params }).then(response => {
+          if (response.data.status === 1) {
+            this.$message({ message: '删除成功', type: 'success', duration: 1500 })
+            this.getList()
+          } else {
+            this.$message({ message: '删除失败', type: 'error', duration: 1500 })
+          }
+        })
+      }).catch(() => {
+        this.$message({ message: '已取消删除', type: 'info', duration: 1500 })
+      })
     }
+
   }
 }
 </script>
+<style>
+.el-form-item {
+    margin-bottom: 15px;
+}
+</style>
+
