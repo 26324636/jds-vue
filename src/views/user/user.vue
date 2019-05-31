@@ -298,8 +298,11 @@ export default {
 }
 </script>
 <style>
-.el-form-item {
-    margin-bottom: 15px;
-}
+  body{
+    background: #f1f1f1;
+  }
+  .el-form-item {
+      margin-bottom: 15px;
+  }
 </style>
 

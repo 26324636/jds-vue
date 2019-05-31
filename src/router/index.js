@@ -7,10 +7,10 @@ Vue.use(Router)
 import Layout from '@/layout'
 
 /* Router Modules */
-import componentsRouter from './modules/components'
-import chartsRouter from './modules/charts'
-import tableRouter from './modules/table'
-import nestedRouter from './modules/nested'
+// import componentsRouter from './modules/components'
+// import chartsRouter from './modules/charts'
+// import tableRouter from './modules/table'
+// import nestedRouter from './modules/nested'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -79,7 +79,7 @@ export const constantRoutes = [
         path: 'dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: 'gad集团项目信息系统' , affix: true }
+        meta: { title: 'gad集团项目信息系统', affix: true }
       }
     ]
   },
@@ -142,62 +142,62 @@ export const constantRoutes = [
       {
         path: 'table',
         name: 'Table',
-        component: () => import('@/views/table/drag-table'),
-        meta: { title: '月报输入'}
+        component: () => import('@/views/yuebao/yuebao_input'),
+        meta: { title: '月报输入' }
       },
       {
         path: 'tree',
         name: 'Tree',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '已输入月报表'}
+        meta: { title: '已输入月报表' }
       },
       {
         path: 'yuebao',
         name: 'Yuebao',
-        component: () => import('@/views/yuebao/yuebao_input'),
-        meta: { title: '月报查看（辅运营）'}
+        component: () => import('@/views/table/drag-table'),
+        meta: { title: '月报查看（辅运营）' }
       },
       {
         path: 'ryyjcx',
         name: 'Ryyjcx',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '人员业绩查询'}
+        meta: { title: '人员业绩查询' }
       },
       {
         path: 'zbsr',
         name: 'Zbsr',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '周报输入'}
+        meta: { title: '周报输入' }
       },
       {
         path: 'ysrzbb',
         name: 'Ysrzbb',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '已输入周报表'}
+        meta: { title: '已输入周报表' }
       },
       {
         path: 'wbzfsr',
         name: 'Wbzfsr',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '外包支付输入'}
+        meta: { title: '外包支付输入' }
       },
       {
         path: 'ysrwbzf',
         name: 'Ysrwbzf',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '已输入外包支付'}
+        meta: { title: '已输入外包支付' }
       },
       {
         path: 'jtjyzb',
         name: 'Jtjyzb',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '集团经营指标'}
+        meta: { title: '集团经营指标' }
       },
       {
         path: 'ybck',
         name: 'Ybck',
         component: () => import('@/views/table/drag-table'),
-        meta: { title: '月报查看（技术中心）'}
+        meta: { title: '月报查看（技术中心）' }
       }
     ]
   },
