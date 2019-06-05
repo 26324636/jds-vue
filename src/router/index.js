@@ -143,12 +143,12 @@ export const constantRoutes = [
         path: 'table',
         name: 'Table',
         component: () => import('@/views/yuebao/yuebao_input'),
-        meta: { title: '月报输入' }
+        meta: { title: '月报输入', keepAlive: true }
       },
       {
         path: 'tree',
         name: 'Tree',
-        component: () => import('@/views/table/drag-table'),
+        component: () => import('@/views/yuebao/test'),
         meta: { title: '已输入月报表' }
       },
       {
