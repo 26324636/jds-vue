@@ -567,6 +567,9 @@
       </div>
     </el-table>
     <hr>
+    <el-button v-waves class="filter-item" type="primary" size="mini" icon="el-icon-search" @click="addLine">
+      加一行
+    </el-button>
     <el-button v-waves class="filter-item" type="primary" size="mini" icon="el-icon-search" @click="getData">
       获取数据
     </el-button>
@@ -587,7 +590,7 @@ export default {
       topSelect: [{ value: '项目编号' }, { value: '项目名称' }, { value: '子项编号' }, { value: '子项名称' }, { value: '项目负责人' }],
       topSelectVal: '',
       topInputVal: '',
-      tableData: [{ id: 0, xmbh: '', swzj: '', xmly: '', province: '', city: '', htjzmjdw: '平方米', jzsbnmywcgzlbl_fa: '0', jzsbnmywcgzlbl_kc: '0', jzsbnmywcgzlbl_sgt: '0', jzsbnmywcgzlbl_hqfw: '0' }, {}, {}, {}, {}, {}],
+      tableData: [{ id: 0, xmbh: '', swzj: '', xmly: '', province: '', city: '', htjzmjdw: '平方米', jzsbnmywcgzlbl_fa: '0', jzsbnmywcgzlbl_kc: '0', jzsbnmywcgzlbl_sgt: '0', jzsbnmywcgzlbl_hqfw: '0' }],
       showDetail: false, // 隐藏细节
       swzjData: { total: 0, items: [] },
       sjzjData: { total: 0, items: [] },
@@ -666,6 +669,12 @@ export default {
     this.getZbwhrList() // 获取周报维护人
   },
   methods: {
+    addLine() {
+      var tableData = this.tableData
+      var arr = {}
+      tableData.push(arr)
+      this.tableData = tableData
+    },
     // 处理当前的是在处理哪一行
     handleFocus(actionItem) {
       this.actionItem = actionItem
